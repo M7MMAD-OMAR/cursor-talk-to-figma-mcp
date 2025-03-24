@@ -4,6 +4,18 @@ This project implements a Model Context Protocol (MCP) integration between Curso
 
 https://github.com/user-attachments/assets/129a14d2-ed73-470f-9a4c-2240b2a4885c
 
+## Windows Support
+
+Windows support was added by [@Clark934](https://github.com/Clark934) with contributions including:
+
+- PowerShell setup scripts for automated installation
+- Windows-specific MCP configuration using environment variables
+- Proper path handling for Windows environments
+- Documentation for Windows setup and configuration
+- Fixed WebSocket server startup for Windows environments
+
+The Windows fork of this project can be found at: https://github.com/Clark934/cursor-talk-to-figma-mcp-windows
+
 ## Project Structure
 
 - `src/talk_to_figma_mcp/` - TypeScript MCP server for Figma integration
@@ -12,7 +24,81 @@ https://github.com/user-attachments/assets/129a14d2-ed73-470f-9a4c-2240b2a4885c
 
 ## Get Started
 
+### Windows Setup
+
+1. Install Bun:
+
+```powershell
+powershell -c "irm bun.sh/install.ps1|iex"
+```
+
+2. Add Bun to your PowerShell profile (run PowerShell as Administrator):
+
+```powershell
+if (!(Test-Path -Path $PROFILE)) {
+    New-Item -ItemType File -Path $PROFILE -Force
+}
+Add-Content -Path $PROFILE -Value "Set-Alias -Name bun -Value `"$env:USERPROFILE\.bun\bin\bun.exe`" -Scope Global"
+```
+
+3. Close and reopen PowerShell
+
+4. Clone and setup the project:
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+```powershell
+.\scripts\setup.ps1
+```
+
+```powershell
+git clone https://github.com/sonnylazuardi/cursor-talk-to-figma-mcp.git
+cd cursor-talk-to-figma-mcp
+
+```
+
+5. Configure the MCP server in Cursor (create/edit `%USERPROFILE%\.cursor\mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "TalkToFigma": {
+      "command": "%USERPROFILE%\\.bun\\bin\\bun.exe",
+      "args": [
+        "C:/path/to/your/cursor-talk-to-figma-mcp/src/talk_to_figma_mcp/server.ts"
+      ]
+    }
+  }
+}
+```
+
+Replace `C:/path/to/your` with your actual project path.
+
+6. Start the WebSocket server:
+
+```powershell
+.\scripts\start.ps1
+```
+
+7. Install the Figma Plugin:
+
+   - Open Figma
+   - Go to Plugins > Development > Import plugin from manifest
+   - Select `src/cursor_mcp_plugin/manifest.json` from your project directory
+   - The plugin will appear as "Cursor MCP Plugin" in your development plugins
+
+8. Use the Plugin:
+   - Open a Figma file
+   - Run the plugin from Plugins > Development > Cursor MCP Plugin
+   - Note the channel ID shown in the plugin window
+   - In Cursor, use `join_channel` with the shown channel ID to connect
+
+### Linux/Mac Setup
+
 1. Install Bun if you haven't already:
+
+For Linux/Mac:
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
@@ -24,20 +110,15 @@ curl -fsSL https://bun.sh/install | bash
 bun setup
 ```
 
-
 3. Start the Websocket server
 
-```bash
-bun socket
-```
-
-4. MCP server
+For Linux/Mac:
 
 ```bash
-bunx cursor-talk-to-figma-mcp
+bun start
 ```
 
-5. Install [Figma Plugin](#figma-plugin)
+4. Install [Figma Plugin](#figma-plugin)
 
 # Quick Video Tutorial
 
@@ -47,35 +128,63 @@ bunx cursor-talk-to-figma-mcp
 
 ### MCP Server: Integration with Cursor
 
-Add the server to your Cursor MCP configuration in `~/.cursor/mcp.json`:
+The MCP server configuration should be added to your global Cursor configuration:
+
+For Windows (in `%USERPROFILE%\.cursor\mcp.json`):
 
 ```json
 {
   "mcpServers": {
     "TalkToFigma": {
-      "command": "bunx",
+      "command": "%USERPROFILE%\\.bun\\bin\\bun.exe",
       "args": [
-        "cursor-talk-to-figma-mcp"
+        "C:/path/to/your/cursor-talk-to-figma-mcp/src/talk_to_figma_mcp/server.ts"
       ]
     }
   }
 }
 ```
 
+For Linux/Mac (in `~/.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "TalkToFigma": {
+      "command": "bun",
+      "args": [
+        "/path/to/cursor-talk-to-figma-mcp/src/talk_to_figma_mcp/server.ts"
+      ]
+    }
+  }
+}
+```
+
+Note: Replace the paths with your actual project path. Use forward slashes (/) even on Windows.
+
 ### WebSocket Server
 
-Start the WebSocket server:
+The WebSocket server must be running for the MCP to communicate with Figma.
+
+For Windows:
+
+```powershell
+.\scripts\start.ps1
+```
+
+For Linux/Mac:
 
 ```bash
-bun socket
+bun start
 ```
 
 ### Figma Plugin
 
-1. In Figma, go to Plugins > Development > New Plugin
-2. Choose "Link existing plugin"
-3. Select the `src/cursor_mcp_plugin/manifest.json` file
-4. The plugin should now be available in your Figma development plugins
+1. In Figma, go to Plugins > Development > Import plugin from manifest
+2. Select the `src/cursor_mcp_plugin/manifest.json` file from your project
+3. The plugin will appear as "Cursor MCP Plugin" in your development plugins
+4. Run the plugin and note the channel ID shown in the plugin window
+5. Use this channel ID with the `join_channel` command in Cursor
 
 ## Usage
 
@@ -163,3 +272,10 @@ When working with the Figma MCP:
 ## License
 
 MIT
+
+Added Windows support including:
+
+- PowerShell setup script for Windows installation
+- Windows-specific commands for running Bun
+- Updated documentation with Windows-specific instructions
+- Added Windows-specific MCP configuration
